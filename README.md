@@ -30,8 +30,7 @@ End-to-end multi-modal planning has been widely adopted to model the uncertainty
 
 ## Getting Started
 
-- [Quick Start](https://github.com/autonomousvision/navsim?tab=readme-ov-file#getting-started-)
-- [Data caching, Training and Evaluation](docs/quick_start.md)
+- [Quick Start](docs/quick_start.md)
 
 
 ## Acknowledgement
@@ -41,4 +40,10 @@ SparseDriveV2 is greatly inspired by the following outstanding contributions to 
 If you find SparseDriveV2 is useful in your research or applications, please consider giving us a star 🌟 and citing it by the following BibTeX entry.
 
 ```bibtex
+@article{sun2026sparsedrivev2,
+  title={SparseDriveV2: Scoring is All You Need for End-to-End Autonomous Driving},
+  author={Sun, Wenchao and Lin, Xuewu and Chen, Keyu and Pei, Zixiang and Li, Xiang and Shi, Yining and Zheng, Sifa},
+  journal={arXiv preprint arXiv:2603.29163},
+  year={2026}
+}
 ```
