@@ -50,7 +50,7 @@ Download the pretrained weights from [here](https://huggingface.co/wenchaosun/Sp
 ### Check the folder structure
 The folder structure after preparing everything should look like:
 
-'''
+```
 .
 ├── ckpt
 │   ├── resnet50-19c8e357.pth
@@ -74,11 +74,11 @@ The folder structure after preparing everything should look like:
 ├── scenario_runner
 ├── scripts
 ├── tools
-'''
+```
 
 ### Commence training and testing
 ```bash
-# training.  note that the stage2 config is for training on 16 gpus, you need to tune some parameters (num_gpus, learning rate) if you want to train on different numver of gpus.
+# training.  note that the stage2 config is for training on 16 gpus, you need to tune some parameters (num_gpus, learning rate) if you want to train on different number of gpus.
 sh scripts/train.sh
 
 # test.
@@ -92,5 +92,5 @@ sh scripts/visualize.sh
 
 ### Closed-loop evalution
 ```
-sh scripts/visualize.sh
+python scripts/eval_b2d_multi.py
 ```
