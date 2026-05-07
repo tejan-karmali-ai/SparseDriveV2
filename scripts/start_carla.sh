@@ -1,0 +1,1 @@
+${CARLA_ROOT}/CarlaUE4.sh -RenderOffScreen -nosound -carla-rpc-port=3001 -graphicsadapter=0
