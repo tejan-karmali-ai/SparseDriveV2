@@ -94,3 +94,4 @@ sh scripts/visualize.sh
 ```
 python scripts/eval_b2d_multi.py
 ```
+Results are saved in close_loop_log/ similar to [this](docs/merged.json).

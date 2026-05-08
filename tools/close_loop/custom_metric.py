@@ -103,7 +103,7 @@ def get_waypoint_route(locs, grp):
             route.append(wp)
     return route
 
-def get_metric(result_file, repeat_num):
+def get_metric(result_file, repeat_num=1):
     with open(result_file, 'r') as f:
         data = json.load(f)
     records = data["_checkpoint"]["records"]

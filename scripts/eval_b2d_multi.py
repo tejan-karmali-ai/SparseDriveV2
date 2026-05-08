@@ -346,5 +346,4 @@ if __name__ == '__main__':
         model_tag = model_name.split("/")[1]
         os.system(f"mv close_loop_log/videos close_loop_log/videos_{model_tag}_route_{SUBSET_LEN}")
         os.system(f"mv close_loop_log/ close_loop_logs_save_new/close_loop_log_{model_tag}_route_{SUBSET_LEN}")
-        os.system(f"mv close_loop_log/ /job_data")
         print(f"End of evaluation of {model_tag}")
