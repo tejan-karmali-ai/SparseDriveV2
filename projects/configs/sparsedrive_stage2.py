@@ -167,7 +167,7 @@ time_points = [(0, 0.5), (0.5, 1), (1, 1.5), (1.5, 2), (2, 2.5), (2.5, 3)]
 plan_config = dict(
     lat=dict(interval=1, num_pts=15, anchor="data/kmeans/path_1m_pts_15_1024_b2d_new_ego.npy", weight=1000/4),
     lon=dict(time_points=time_points, anchor="data/kmeans/vel_seq_K256_t30.npy", weight=100/2),
-    traj=dict(time_points=time_points, anchor=f"data/kmeans/trajectory_{lat_fut_mode}_{lon_fut_mode}.npz", weight=50000/8/12),
+    traj=dict(time_points=time_points, anchor=f"data/kmeans/trajectory_{lat_fut_mode}_{lon_fut_mode}_b2d.npz", weight=50000/8/12),
     collision=dict(weight=1.0),
 )
 cond_config = dict(
