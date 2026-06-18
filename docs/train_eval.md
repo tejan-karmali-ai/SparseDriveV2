@@ -52,3 +52,30 @@ sh scripts/evaluation/run_pdm_score_navtest_v2.sh
 
 The EPDM scores for navsimv2 both before and after the [bug fix](https://github.com/autonomousvision/navsim/issues/151#issue-3379282167) will be reported.
 
+## Evaluation protocol versions
+
+The evaluation script produces results under three named protocols. All three run on the same scene set (396 navmini or navtest scenarios); they differ only in scoring logic.
+
+### navmini_v1 / navtest_v1
+Uses the **NAVSIMv1** framework (`navsim.navsim_v1.*`). Output: `navtest_v1.csv`.
+
+- Metrics: `no_at_fault_collisions`, `drivable_area_compliance`, `driving_direction_compliance`, `time_to_collision_within_bound`, `comfort`, `ego_progress`
+- Non-reactive traffic agents; no two-frame extended comfort
+- Final score: **PDMS**
+
+### navmini_v2 / navtest_v2
+Uses the **NAVSIMv2** framework. Output: `navtest_v2.csv`.
+
+- Adds `lane_keeping`, `history_comfort`, `two_frame_extended_comfort`, `traffic_light_compliance`
+- Reactive traffic agents during simulation
+- Human-penalty filter: if the human trajectory also fails a metric, the model is not penalized (that metric is set to 1)
+- Final score: **EPDMS**
+- **Known bug**: after the human-penalty filter modifies individual metric values, `multiplicative_metrics_prod` (product of binary safety metrics) and the `weighted_metrics` array are not recomputed. This means those intermediate values go stale and the final EPDMS is computed from inconsistent state.
+
+### navmini_v2_bugfix / navtest_v2_bug_fix
+Same as v2 but uses `navsim/evaluate/pdm_score_fix_bug.py`. Output: `navtest_v2_bug_fix.csv`.
+
+- Adds a recalculation step after the human-penalty filter: recomputes `multiplicative_metrics_prod` and `weighted_metrics` so they stay consistent with the corrected per-metric values before the final score is aggregated.
+- Scores differ from v2 only for scenarios where the human trajectory also fails at least one metric; in those cases bugfix scores are equal or higher.
+- This is the **recommended** protocol for reporting NAVSIMv2 results.
+
