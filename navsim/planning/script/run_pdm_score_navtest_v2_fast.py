@@ -117,6 +117,16 @@ def run_pdm_score(args: List[Dict[str, Union[List[str], DictConfig]]], pdm_score
             score_row["start_point_y"] = metric_cache.ego_state.rear_axle.y
             score_row["ego_simulated_states"] = [ego_simulated_states]  # used for two-frames extended comfort
 
+            all_relative_poses = [
+                StateSE2(x=trajectory.poses[i, 0], y=trajectory.poses[i, 1], heading=trajectory.poses[i, 2])
+                for i in range(len(trajectory.poses))
+            ]
+            all_absolute_poses = relative_to_absolute_poses(metric_cache.ego_state.rear_axle, all_relative_poses)
+            for i, abs_pose in enumerate(all_absolute_poses):
+                score_row[f"pred_traj_t{i}_x"] = abs_pose.x
+                score_row[f"pred_traj_t{i}_y"] = abs_pose.y
+                score_row[f"pred_traj_t{i}_h"] = abs_pose.heading
+
         except Exception:
             logger.warning(f"----------- Agent failed for token {token}:")
             traceback.print_exc()
@@ -221,8 +231,9 @@ def create_scene_aggregators(
 
         all_updates.append(updated_rows)
 
-    all_updates_df = pd.concat(all_updates, ignore_index=True).set_index("token")
-    full_score_df.update(all_updates_df)
+    if all_updates:
+        all_updates_df = pd.concat(all_updates, ignore_index=True).set_index("token")
+        full_score_df.update(all_updates_df)
     full_score_df.reset_index(inplace=True)
     full_score_df = full_score_df.drop(columns=["ego_simulated_states"])
 
@@ -359,12 +370,18 @@ def main(cfg: DictConfig) -> None:
     average_row["valid"] = pdm_score_df["valid"].all()
 
     # append average and pseudo closed loop scores
-    pdm_score_df = pdm_score_df[["token", "valid"] + score_cols]
+    traj_cols = [c for c in pdm_score_df.columns if c.startswith("pred_traj_")]
+    pdm_score_df = pdm_score_df[["token", "valid"] + score_cols + traj_cols]
     pdm_score_df.loc[len(pdm_score_df)] = average_row
 
     save_path = Path(cfg.output_dir)
     timestamp = datetime.now().strftime("%Y.%m.%d.%H.%M.%S")
     pdm_score_df.to_csv(save_path / "navtest_v2.csv")
+
+    import pickle as _pickle
+    _pred_save = {tok: traj.poses for tok, traj in merged_predictions.items()}
+    with open(save_path / "predictions.pkl", "wb") as _f:
+        _pickle.dump(_pred_save, _f)
 
     logger.info(
         f"""
@@ -424,7 +441,8 @@ def main(cfg: DictConfig) -> None:
     average_row["valid"] = pdm_score_df["valid"].all()
 
     # append average and pseudo closed loop scores
-    pdm_score_df = pdm_score_df[["token", "valid"] + score_cols]
+    traj_cols = [c for c in pdm_score_df.columns if c.startswith("pred_traj_")]
+    pdm_score_df = pdm_score_df[["token", "valid"] + score_cols + traj_cols]
     pdm_score_df.loc[len(pdm_score_df)] = average_row
 
     save_path = Path(cfg.output_dir)

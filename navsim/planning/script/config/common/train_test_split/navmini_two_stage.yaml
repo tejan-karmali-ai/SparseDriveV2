@@ -1,0 +1,4 @@
+defaults:
+  - scene_filter: navmini_two_stage
+
+data_split: mini

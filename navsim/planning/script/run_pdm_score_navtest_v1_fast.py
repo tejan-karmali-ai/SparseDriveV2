@@ -12,7 +12,11 @@ import uuid
 import hydra
 from hydra.utils import instantiate
 from omegaconf import DictConfig
+import numpy as np
 import pandas as pd
+
+from nuplan.common.actor_state.state_representation import StateSE2
+from nuplan.common.geometry.convert import relative_to_absolute_poses
 
 import torch.distributed as dist
 from torch.utils.data import DataLoader
@@ -89,6 +93,16 @@ def run_pdm_score(args: List[Dict[str, Union[List[str], DictConfig]]]) -> List[D
                 scorer=scorer,
             )
             score_row.update(asdict(pdm_result))
+
+            all_relative_poses = [
+                StateSE2(x=float(trajectory.poses[i, 0]), y=float(trajectory.poses[i, 1]), heading=float(trajectory.poses[i, 2]))
+                for i in range(len(trajectory.poses))
+            ]
+            all_absolute_poses = relative_to_absolute_poses(metric_cache.ego_state.rear_axle, all_relative_poses)
+            for i, abs_pose in enumerate(all_absolute_poses):
+                score_row[f"pred_traj_t{i}_x"] = abs_pose.x
+                score_row[f"pred_traj_t{i}_y"] = abs_pose.y
+                score_row[f"pred_traj_t{i}_h"] = abs_pose.heading
         except Exception as e:
             logger.warning(f"----------- Agent failed for token {token}:")
             traceback.print_exc()
@@ -194,7 +208,8 @@ def main(cfg: DictConfig) -> None:
     pdm_score_df = pd.DataFrame(score_rows)
     num_sucessful_scenarios = pdm_score_df["valid"].sum()
     num_failed_scenarios = len(pdm_score_df) - num_sucessful_scenarios
-    average_row = pdm_score_df.drop(columns=["token", "valid"]).mean(skipna=True)
+    traj_cols = [c for c in pdm_score_df.columns if c.startswith("pred_traj_")]
+    average_row = pdm_score_df.drop(columns=["token", "valid"] + traj_cols).mean(skipna=True)
     average_row["token"] = "average"
     average_row["valid"] = pdm_score_df["valid"].all()
     pdm_score_df.loc[len(pdm_score_df)] = average_row
@@ -202,6 +217,11 @@ def main(cfg: DictConfig) -> None:
     save_path = Path(cfg.output_dir)
     timestamp = datetime.now().strftime("%Y.%m.%d.%H.%M.%S")
     pdm_score_df.to_csv(save_path / f"navtest_v1.csv")
+
+    import pickle
+    pred_save = {tok: traj.poses for tok, traj in merged_predictions.items()}
+    with open(save_path / "predictions.pkl", "wb") as _f:
+        pickle.dump(pred_save, _f)
 
     logger.info(
         f"""

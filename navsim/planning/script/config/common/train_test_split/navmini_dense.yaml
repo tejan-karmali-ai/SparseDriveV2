@@ -1,0 +1,4 @@
+defaults:
+  - scene_filter: navmini_dense
+
+data_split: mini

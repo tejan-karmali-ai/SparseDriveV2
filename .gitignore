@@ -34,3 +34,10 @@ vis/
 
 build/
 *.so
+
+# Lilypad outputs
+lilypad_logs/
+oci_logs/
+configs/archieve/
+work_dirs/
+wandb/
