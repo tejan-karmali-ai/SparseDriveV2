@@ -1,0 +1,88 @@
+name: sparsedrivev2_eval_navsimv2
+
+cluster_resources:
+  num_gpus: 1
+  gpu_machine_type: a100.8
+  preemptible: always
+  customer_resource: research
+  allowed_regions:
+    - us-chicago-1
+
+workload_variant_config:
+  workload_type: generic
+  entrypoint_fn: lilypad_entrypoint.eval_entrypoint_fn
+  entrypoint_fn_config:
+    num_gpus: 1
+    dataset_version: "v2"
+    experiment_name: "sparsedrive_navsimv2_eval"
+
+    # --- pretrained checkpoint (downloaded from HuggingFace) ---
+    pretrained_checkpoint: "v2"
+
+    # --- Fast path: precomputed caches on S3 ---
+    # After the first compute run, set these and clear dataset_s3_path.
+    test_cache_s3_path: null
+    metric_cache_s3_path: null
+
+    # Path to just the navsim_logs/test metadata (small, from research-datasets Phoenix).
+    # Only needed when using precomputed caches (test_cache_s3_path + metric_cache_s3_path).
+    # Set to null when using dataset_s3_path (logs are downloaded as part of the dataset).
+    navsim_logs_s3_path: "s3://research-datasets/users/ishaan_rawal/navsim/navsim_logs/test"
+
+    # --- Compute path: raw NAVSIM data (first run only) ---
+    # Downloads navsim_logs/test + sensor_blobs/test from OCI Phoenix.
+    dataset_s3_path: "s3://research-datasets/users/ishaan_rawal/navsim"
+
+    # Save computed caches to S3 after first run (for fast_path on next run).
+    test_cache_s3_output: "s3://tejan-experiments/sparsedrivev2/test_cache_v2"
+    metric_cache_s3_output: "s3://tejan-experiments/sparsedrivev2/metric_cache_v2"
+
+    # --- Output ---
+    results_s3_output: "s3://tejan-experiments/sparsedrivev2/results"
+
+    batch_size: 8
+    extra_overrides: []
+
+runtime_environment:
+  code_assets:
+    root_directory: /home/tejan/SparseDriveV2
+    pip_requirements_path: requirements_lilypad.txt
+    regex_excludes:
+      - "^/\\.git/"
+      - "/__pycache__/"
+      - "\\.egg-info/"
+      - "\\.so$"
+      - "\\.pyc$"
+      - "^/\\.venv/"
+      - "^/build/"
+      - "^/wandb/"
+      - "^/exp/"
+      - "\\.log$"
+      - "\\.safetensors$"
+      - "\\.tar\\.gz$"
+      - "^/weights/"
+      - "^/ckpt/kmeans/"
+      - "\\.pkl$"
+      - "^/vis/"
+      - "^/assets/"
+      - "^/dataset/"
+    max_file_size_mb: 50
+
+  required_environment_variables:
+    - AWS_ACCESS_KEY_ID
+    - AWS_SECRET_ACCESS_KEY
+    - OCI_PHX_ACCESS_KEY_ID
+    - OCI_PHX_SECRET_ACCESS_KEY
+
+  constant_environment_variables:
+    AWS_REQUEST_CHECKSUM_CALCULATION: "when_required"
+    AWS_RESPONSE_CHECKSUM_VALIDATION: "when_required"
+    AWS_ENDPOINT_URL: "https://idskhu5vqvtl.compat.objectstorage.us-chicago-1.oraclecloud.com"
+    AWS_ENDPOINT_URL_S3: "https://idskhu5vqvtl.compat.objectstorage.us-chicago-1.oraclecloud.com"
+    AWS_DEFAULT_REGION: "us-chicago-1"
+    AWS_REGION: "us-chicago-1"
+    TORCH_CUDA_ARCH_LIST: "8.0"
+    PATH: /usr/local/cuda/bin:$PATH
+    LD_LIBRARY_PATH: /usr/local/cuda/lib64:$LD_LIBRARY_PATH
+    HYDRA_FULL_ERROR: "1"
+    PYTHONUNBUFFERED: "1"
