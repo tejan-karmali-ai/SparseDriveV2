@@ -1,6 +1,7 @@
 import random
 import math
 import os
+from multiprocessing import Pool
 from os import path as osp
 import cv2
 import tempfile
@@ -886,12 +887,21 @@ class B2D3DDataset(Dataset):
 
         gt_boxes = self.load_gt()
 
+        # Build list of (class_name, dist_th) tasks and run accumulate in parallel
+        tasks = [
+            (gt_boxes, pred_boxes, cls, center_distance, dt)
+            for cls in self.eval_cfg['class_names']
+            for dt in self.eval_cfg['dist_ths']
+        ]
+        n_workers = min(12, len(tasks))  # 50% of 24 cores
+        print(f'Running {len(tasks)} accumulate tasks with {n_workers} workers...')
+        with Pool(n_workers) as pool:
+            results = pool.starmap(accumulate, tasks)
+
         metric_data_list = DetectionMetricDataList()
-        for class_name in self.eval_cfg['class_names']:
-            for dist_th in self.eval_cfg['dist_ths']:
-                md = accumulate(gt_boxes, pred_boxes, class_name, center_distance, dist_th)
-                metric_data_list.set(class_name, dist_th, md)
-                metrics = DetectionMetrics(self.eval_cfg)
+        for (gt_boxes_, pred_boxes_, cls, _dist_fn, dt), md in zip(tasks, results):
+            metric_data_list.set(cls, dt, md)
+        metrics = DetectionMetrics(self.eval_cfg)
 
         for class_name in self.eval_cfg['class_names']:
             # Compute APs.

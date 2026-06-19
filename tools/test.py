@@ -6,6 +6,17 @@ from os import path as osp
 
 import torch
 import warnings
+
+# Patch for PyTorch 2.8 compatibility: _get_stream expects torch.device, not int
+def _patch_torch_get_stream():
+    import torch.nn.parallel._functions as _pf
+    _orig = _pf._get_stream
+    def _patched(device):
+        if isinstance(device, int):
+            device = torch.device('cuda', device)
+        return _orig(device)
+    _pf._get_stream = _patched
+_patch_torch_get_stream()
 from mmcv import Config, DictAction
 from mmcv.cnn import fuse_conv_bn
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel

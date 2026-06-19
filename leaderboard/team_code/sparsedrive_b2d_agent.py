@@ -15,6 +15,17 @@ import numpy as np
 import torch
 import pickle
 
+# Patch for PyTorch 2.8 compat: mmcv scatter passes int device ids but torch 2.8 expects torch.device
+def _patch_torch_get_stream():
+    import torch.nn.parallel._functions as _pf
+    _orig = _pf._get_stream
+    def _patched(device):
+        if isinstance(device, int):
+            device = torch.device('cuda', device)
+        return _orig(device)
+    _pf._get_stream = _patched
+_patch_torch_get_stream()
+
 import carla
 from team_code.pid_controller import PIDController
 from team_code.planner import RoutePlanner

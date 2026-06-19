@@ -264,8 +264,9 @@ class ScenarioManager(object):
 
         # Make sure the scenario thread finishes to avoid blocks
         self._running = False
-        self._scenario_thread.join()
-        self._scenario_thread = None
+        if self._scenario_thread is not None:
+            self._scenario_thread.join()
+            self._scenario_thread = None
 
     def compute_duration_time(self):
         """

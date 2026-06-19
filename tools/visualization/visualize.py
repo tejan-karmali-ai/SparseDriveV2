@@ -38,9 +38,9 @@ from tools.visualization.bevcam_render import BEVCamRender
 # )
 
 plot_choices = dict(
-    bev_pred = False,
+    bev_pred = True,
     bev_gt = True,
-    cam_pred = False,
+    cam_pred = True,
     cam_gt = True,
     bevcam_pred = False,
     det = True,
@@ -166,7 +166,10 @@ class Visualizer:
     def image2video(self, fps=5, downsample=4):
         imgs_path = glob.glob(os.path.join(self.combine_dir, '*.jpg'))
         imgs_path = sorted(imgs_path)
+        if not imgs_path:
+            return
         img_array = []
+        size = None
         for img_path in tqdm(imgs_path):
             img = cv2.imread(img_path)
             height, width, channel = img.shape
@@ -175,6 +178,8 @@ class Visualizer:
             height, width, channel = img.shape
             size = (width, height)
             img_array.append(img)
+        if not img_array or size is None:
+            return
         out_path = os.path.join(self.out_dir, 'video.mp4')
         out = cv2.VideoWriter(
             out_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, size)

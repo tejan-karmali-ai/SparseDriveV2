@@ -18,7 +18,7 @@ from shapely.geometry import LineString
 DATAROOT = 'data/bench2drive'
 MAP_ROOT = 'data/bench2drive/maps'
 OUT_DIR = 'data/infos'
-split_file = 'data/bench2drive/splits/bench2drive_base_train_val_split.json'
+split_file = 'data/bench2drive/splits/bench2drive_mini_split.json'
 MAP_CLASSES = [
     'Broken',
     'Solid',
